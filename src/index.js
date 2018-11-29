@@ -4,7 +4,9 @@ const {
   signin,
   scrape,
   saveBills,
-  log
+  log,
+  htmlToPDF,
+  createCozyPDFDocument
 } = require('cozy-konnector-libs')
 
 const request = requestFactory({
@@ -42,7 +44,7 @@ async function start(fields) {
   log('info', 'Parsing list of refunds')
   const bills = await parseBills($, pdfList)
 
-  console.log(bills)
+  console.log('bills', bills)
   log('info', 'Saving data to Cozy')
   await saveBills(bills, fields, {
     identifiers: ['todoeovimcd'] //TODO  FOUND IDENTIFIERS
@@ -66,10 +68,11 @@ function authenticate(username, password) {
   })
 }
 
-function parseBills($, pdfList) {
+async function parseBills($, pdfList) {
   const bills = []
   // Forced to use collapsed class of this tr because ligne-titre is in sub table
-  $('tbody tr[class="ligne-titre collapsed"]').each((index, el) => {
+  //Note 1er await useless
+  await $('tbody tr[class="ligne-titre collapsed"]').each(async (index, el) => {
     log('info', `Found master line number ${index}`)
     // Verify next tr is a line with sub bills
     if($(el).next('tr').hasClass('ligne-detail') !== true) {
@@ -80,18 +83,21 @@ function parseBills($, pdfList) {
     const amount = normalizePrice($(el).find('td[class="mutuelle"]').text())
     const htmlUrl = baseUrl + $(el).next('tr').find('a[title="Imprimer"]').attr('href')
     const id = htmlUrl.match(/\d*?$/)[0]
-    // If a pdf matchin by id is found, set it as fileurl else generate a pdf from html
+    console.log('htmlurl', htmlUrl)
+    console.log($(el).html())
+
+    // If a pdf matching by id is found, set it as fileurl else generate a pdf from html
     const matchingPdf = pdfList.find(obj => obj.id === id)
     let fileurl = ''
-    if (matchingPdf) {
+    let filestream = null
+    if (matchingPdf && false) { // TEST CASE TODO REMOVE false
       log('info', 'Found matching this masterline with a pdf')
       fileurl = matchingPdf.fileurl
     } else {
       log('info', 'No pdf match this line, generating one myself')
-      //generate
+      const $htmlToPdf = await request(htmlUrl)
+      filestream = generatePDF($htmlToPdf, htmlUrl)
     }
-    console.log('htmlurl', htmlUrl)
-    console.log($(el).html())
 
     // Scrape each sub bill
     $(el).next('tr').find('tbody tr[class="ligne-titre"]').each((subIndex, subEl) => {
@@ -106,13 +112,16 @@ function parseBills($, pdfList) {
         isRefund: true,
         isThirdPartyPayer: false,
         filename: formatDate(date) + `_${amount}€_EoviMCD.pdf`,
-        fileurl,
         date,
         amount
       }
+      if (fileurl !== '') {
+        bill = {...bill, fileurl}
+      } else {
+        bill = {...bill, filestream}
+      }
       bills.push(bill)
     })
-
 
   })
   return bills
@@ -146,6 +155,16 @@ function scrapePdfList($) {
     })
   })
   return pdfs
+}
+
+function generatePDF($, url) {
+  let doc = createCozyPDFDocument(
+    'Généré automatiquement par le connecteur Eovi MCD Mutuelle depuis la page',
+    url
+  )
+  htmlToPDF($, doc, $('body'), {})
+  doc.end()
+  return doc
 }
 
 // Convert a price string to a float
