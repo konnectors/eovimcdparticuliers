@@ -85,5 +85,6 @@
       }
     }
   },
+  "banksTransactionRegExp": "\\bEOVI MCD MUTUELLE\\b",
   "manifest_version": "2"
 }
