@@ -164,7 +164,7 @@ async function parseBills($, pdfList) {
         currency: '€',
         isRefund: true,
         isThirdPartyPayer: false,
-        filename: formatDate(date) + `_${groupAmount}€_EoviMCD.pdf`,
+        filename: formatDate(date) + `_EoviMCD` + `_${groupAmount.toFixed(2)}€.pdf`,
         date,
         groupAmount
       }
