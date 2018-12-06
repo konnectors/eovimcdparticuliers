@@ -85,6 +85,7 @@ function authenticate(username, password) {
 
 async function parseBills($, pdfList, pdfOption) {
   const bills = []
+  let pdfListCount = pdfList
   // Forced to use collapsed class of this tr because ligne-titre is in sub table
   const masters = Array.from($('tbody tr[class="ligne-titre collapsed"]'))
   for (let index = 0; index < masters.length; index++) {
@@ -147,6 +148,7 @@ async function parseBills($, pdfList, pdfOption) {
             date
           )}`
         )
+        pdfListCount[index].matchedTime ++
         fileurl = pdfList[index].fileurl
       } else {
         log(
@@ -204,6 +206,14 @@ async function parseBills($, pdfList, pdfOption) {
       }
     }
   }
+
+  // Check if all pdf has been matched
+  for (let index = 0; index < pdfListCount.length; index++) {
+    if (pdfListCount[index].matchedTime === 0) {
+      log('warn',
+          `The pdf index ${index} of ${formatFrenchDate(pdfListCount[index].date)} found in list has not been matched`)
+    }
+  }
   return bills
 }
 
@@ -256,7 +266,8 @@ function scrapePdfList($) {
     )
     pdfs.push({
       fileurl: `${baseUrl}${fileurl}`,
-      date
+      date,
+      matchedTime: 0
     })
   })
   return pdfs
