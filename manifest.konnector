@@ -1,9 +1,11 @@
 {
   "version": "1.1.0",
   "name": "EoviMCD Particuliers",
+  "version": "1.0.0",
+  "name": "Eovi MCD Particuliers",
   "type": "konnector",
   "language": "node",
-  "icon": "icon.svg",
+  "icon": "icon.png",
   "slug": "eovimcdparticuliers",
   "source": "git://github.com/konnectors/eovimcdparticuliers.git",
   "editor": "Cozy",
@@ -56,8 +58,8 @@
   ],
   "locales": {
     "fr": {
-      "short_description": "Connecteur Eovi-MCD Mutuelle",
-      "long_description": "Ce connecteur récupère vos décomptes de remboursement sur le site Eovi-MCD Mutelle",
+      "short_description": "Récupère vos relevés de remboursement",
+      "long_description": "Récupère les relévés de remboursement de votre assurance santé complémentaire, pour les adhérents particuliers.",
       "permissions": {
         "bank operations": {
           "description": "Utilisé pour relier les factures à des operations bancaires"
@@ -74,8 +76,8 @@
       }
     },
     "en": {
-      "short_description": "Eovi-MCD health inssurance Connector",
-      "long_description": "This connector fetches your health bills",
+      "short_description": "Fetch your reimbursment statement ",
+      "long_description": "This connector fetches your reimbursement statements for your complementary health insurance.",
       "permissions": {
         "bank operations": {
           "description": "Required to link bank operations to bills"
@@ -92,5 +94,6 @@
       }
     }
   },
+  "banksTransactionRegExp": "\\bEOVI MCD MUTUELLE\\b",
   "manifest_version": "2"
 }

@@ -35,12 +35,20 @@ async function start(fields) {
       'releve_de_prestations'
   )
   let pdfList = []
+  let pdfOption = false
   try {
     pdfList = scrapePdfList($pdf)
+    if (pdfList.length > 0) {
+      pdfOption = true
+    }
     log('info', `Found ${pdfList.length} pdfs, expect as many masterline`)
+    log('info', 'Option is detect as activated')
   } catch (e) {
     log('warn', e)
-    log('warn', 'Impossible to fetch pdfs, option may be not activated')
+    log('warn', 'Impossible to fetch pdfs, option may be NOT activated')
+  }
+  if (pdfList.length === 0) {
+    log('warn', 'No pdf found in pdf page, option may be NOT activated')
   }
 
   log('info', 'Fetching page of refunds list')
@@ -49,7 +57,7 @@ async function start(fields) {
   )
 
   log('info', 'Parsing list of refunds')
-  const bills = await parseBills($, pdfList)
+  let bills = await parseBills($, pdfList, pdfOption)
   log('info', `${bills.length} bills generated`)
 
   log('info', 'Saving data to Cozy')
@@ -75,13 +83,14 @@ function authenticate(username, password) {
   })
 }
 
-async function parseBills($, pdfList) {
+async function parseBills($, pdfList, pdfOption) {
   const bills = []
+  let pdfListCount = pdfList
   // Forced to use collapsed class of this tr because ligne-titre is in sub table
   const masters = Array.from($('tbody tr[class="ligne-titre collapsed"]'))
   for (let index = 0; index < masters.length; index++) {
     const el = masters[index]
-    log('info', `Found master line number ${index}`)
+    log('debug', `Found master line`)
     // Verify next tr is a line with sub bills
     if (
       $(el)
@@ -95,6 +104,10 @@ async function parseBills($, pdfList) {
       $(el)
         .find('td[class="date"]')
         .text()
+    )
+    log(
+      'debug',
+      `Master line has number ${index} with date ${formatFrenchDate(date)}`
     )
     const masterAmount = normalizePrice(
       $(el)
@@ -111,13 +124,6 @@ async function parseBills($, pdfList) {
         .find('td[class="mutuelle"]')
         .text()
     )
-    const htmlUrl =
-      baseUrl +
-      $(el)
-        .next('tr')
-        .find('a[title="Imprimer"]')
-        .attr('href')
-    const id = htmlUrl.match(/\d*?$/)[0]
 
     // Scrape Metadatas of each sub bill
     const subs = Array.from(
@@ -128,18 +134,33 @@ async function parseBills($, pdfList) {
     const subsLinesMetadatas = []
     for (let subIndex = 0; subIndex < subs.length; subIndex++) {
       subsLinesMetadatas.push(parseSubline($, subs[subIndex]))
-      log('info', `Found subline number ${subIndex} of master ${index}`)
+      log('debug', `Found subline number ${subIndex} of master ${index}`)
     }
 
-    // If a pdf matching by id is found, set it as fileurl else generate a pdf from html
-    const matchingPdf = pdfList.find(obj => obj.id === id)
+    // if pdf found by index, verify date, set url, else trying to generate one
     let fileurl = ''
     let filestream = null
-    if (matchingPdf) {
-      log('info', 'Found matching this masterline with a pdf')
-      fileurl = matchingPdf.fileurl
-    } else {
-      log('info', 'No pdf match this  masterline, generating one myself')
+    if (pdfList[index]) {
+      if (pdfList[index].date.getTime() == date.getTime()) {
+        log(
+          'debug',
+          `Found matching pdf by index ${index} and date ${formatFrenchDate(
+            date
+          )}`
+        )
+        pdfListCount[index].matchedTime ++
+        fileurl = pdfList[index].fileurl
+      } else {
+        log(
+          'warn',
+          `Impossible to match a pdf index ${index} and date ${formatFrenchDate(
+            date
+          )}`
+        )
+      }
+    } else if (pdfOption !== true) {
+      // if option is disabled, no generation
+      log('debug', `Generating pdf myself for master ${index}`)
       const $htmlToPdf = generateHtmlPdf(
         formatFrenchDate(date),
         masterAmount,
@@ -151,7 +172,8 @@ async function parseBills($, pdfList) {
     }
 
     // Create bill for each subline
-    for (let sub of subsLinesMetadatas) {
+    for (let subIndex = 0; subIndex < subs.length; subIndex++) {
+      const sub = subsLinesMetadatas[subIndex]
       let bill = {
         originalDate: sub.originalDate,
         beneficiary: sub.beneficiary,
@@ -164,16 +186,32 @@ async function parseBills($, pdfList) {
         currency: '€',
         isRefund: true,
         isThirdPartyPayer: false,
-        filename: formatDate(date) + `_${groupAmount}€_EoviMCD.pdf`,
+        filename:
+          formatDate(date) + `_EoviMCD` + `_${groupAmount.toFixed(2)}€.pdf`,
         date,
         groupAmount
       }
+      // If pdf we push the bill, else it's a bill without pdf, we discard this one
       if (fileurl !== '') {
         bill.fileurl = fileurl
-      } else {
+        bills.push(bill)
+      } else if (filestream !== null) {
         bill.filestream = filestream
+        bills.push(bill)
+      } else {
+        log(
+          'warn',
+          `Discard subline ${subIndex} of master ${index}, option is activated but no pdf match`
+        )
       }
-      bills.push(bill)
+    }
+  }
+
+  // Check if all pdf has been matched
+  for (let index = 0; index < pdfListCount.length; index++) {
+    if (pdfListCount[index].matchedTime === 0) {
+      log('warn',
+          `The pdf index ${index} of ${formatFrenchDate(pdfListCount[index].date)} found in list has not been matched`)
     }
   }
   return bills
@@ -226,11 +264,10 @@ function scrapePdfList($) {
         .text()
         .trim()
     )
-    const id = fileurl.match(/\/(\d*?)\//)[1]
     pdfs.push({
       fileurl: `${baseUrl}${fileurl}`,
       date,
-      id
+      matchedTime: 0
     })
   })
   return pdfs
