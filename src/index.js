@@ -148,7 +148,7 @@ async function parseBills($, pdfList, pdfOption) {
             date
           )}`
         )
-        pdfListCount[index].matchedTime ++
+        pdfListCount[index].matchedTime++
         fileurl = pdfList[index].fileurl
       } else {
         log(
@@ -210,8 +210,12 @@ async function parseBills($, pdfList, pdfOption) {
   // Check if all pdf has been matched
   for (let index = 0; index < pdfListCount.length; index++) {
     if (pdfListCount[index].matchedTime === 0) {
-      log('warn',
-          `The pdf index ${index} of ${formatFrenchDate(pdfListCount[index].date)} found in list has not been matched`)
+      log(
+        'warn',
+        `The pdf index ${index} of ${formatFrenchDate(
+          pdfListCount[index].date
+        )} found in list has not been matched`
+      )
     }
   }
   return bills
