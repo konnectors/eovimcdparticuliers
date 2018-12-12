@@ -72,7 +72,7 @@ function authenticate(username, password) {
     formSelector: 'form',
     formData: { _username: username, _password: password },
     validate: (statusCode, $, fullResponse) => {
-      log('debug', 'Redirecting to', fullResponse.request.uri.href)
+      log('debug', `Redirecting to ${fullResponse.request.uri.href}`)
       if (fullResponse.request.uri.href === `${baseUrl}/login`) {
         log('error', 'Auth redirect to login page, LOGIN_FAILED detected')
         return false
