@@ -268,6 +268,7 @@ function scrapePdfList($) {
         .text()
         .trim()
     )
+    log('debug', `Pdf index ${index} has date ${formatFrenchDate(date)}`)
     pdfs.push({
       fileurl: `${baseUrl}${fileurl}`,
       date,
