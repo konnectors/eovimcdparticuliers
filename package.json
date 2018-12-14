@@ -35,19 +35,20 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
-    "cozy-konnector-libs": "4.11.8"
+    "cozy-konnector-libs": "4.12.1"
   },
   "devDependencies": {
     "copy-webpack-plugin": "4.6.0",
-    "cozy-app-publish": "0.9.0",
-    "cozy-jobs-cli": "1.5.8",
-    "eslint": "5.9.0",
-    "eslint-config-cozy-app": "1.1.4",
+    "cozy-app-publish": "0.9.1",
+    "cozy-jobs-cli": "1.6.1",
+    "eslint": "5.10.0",
+    "eslint-config-cozy-app": "1.1.5",
+    "eslint-plugin-prettier": "^3.0.0",
     "git-directory-deploy": "1.5.1",
-    "husky": "1.2.0",
-    "konitor": "0.10.0",
+    "husky": "1.2.1",
+    "konitor": "0.10.1",
     "svgo": "1.1.1",
-    "webpack": "4.26.1",
+    "webpack": "4.27.1",
     "webpack-cli": "3.1.2"
   }
 }
