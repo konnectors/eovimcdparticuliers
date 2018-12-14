@@ -42,8 +42,7 @@ async function start(fields) {
     throw new Error(errors.VENDOR_DOWN)
   }
   if (pdfList.length === 0) {
-    log('error', 'No pdf found in pdf page, option may be NOT activated')
-    throw new Error(errors.USER_ACTION_NEEDED + '.ACTIVATE_PDF_GENERATION')
+    log('warn', 'No pdf found in pdf page, option may be NOT activated')
   }
 
   // log('info', 'Fetching page of refunds list')
