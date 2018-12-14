@@ -1,8 +1,6 @@
 {
   "version": "1.1.0",
   "name": "EoviMCD Particuliers",
-  "version": "1.0.0",
-  "name": "Eovi MCD Particuliers",
   "type": "konnector",
   "language": "node",
   "icon": "icon.png",
