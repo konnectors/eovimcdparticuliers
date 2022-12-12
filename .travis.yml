@@ -1,12 +1,13 @@
 language: node_js
 node_js:
-- '8'
+- '16.18.1'
 env:
   global:
-  - GH_USER_EMAIL="travis@example.org"
-  - GH_USER_NAME="cozy-bot"
-  - DEPLOY_REPOSITORY="git@github.com:konnectors/eovimcdparticuliers.git"
+  - MATTERMOST_CHANNEL=publication
+  # REGISTRY_TOKEN(editor=cozy, app=eovimcdparticulier)
   - secure: UmDtCWoXXS6TC7UReMk1EiXezywiU1j2GeYgyXUBpDSHBwvfgOtWfWuVL8rGVRUv6vXwJ2pE5dKLD1pv9bG3Fxy2XTCqb1v98z6WwGb2EhLQPhZXSPmRzdrkqDcre6NDgfzjuD5YO9lpQrwlfJmSwnMiowJb+Fnli4Ci4on7QwZcBWqjBbPw6HI6B4vApJZi8zIm1PJQdd0oAMwushjZY2vblv321MBox8aTeyr1F21++Eu9loaaCFy+1w7qxIslGlKm8h7qnA8QzDZIdsRtHb4TtcWUlVk3vEothOvK4mbl0Hkx93sAiKgrWvdPAd2PYME1iRaG36F5WvVxQPuiLhOloirAko+WonFvFqfsFYCIns1JKYbdlv2FR1Rgud6bI0yoQ5gYlPN/GXDKnS/Zrj3/9IGJnVaoz9WwCfK6jL/O5idkWfiUTdEeEZLHFn+eVBypqDSTJLuR0amttB+D4zJEkgd/1sdRjp9VEWuC2EEewgvrJUg1Z6PrBpzVbY2Ft9OXkJhU/xI88jWsIiUTk30Jsltonci5DVvKtRR3RtoyfkD67EEAK0vbEu2NkW6oCRuOaeN1GegdCduof4sa2fUorh2H6s5qPuyOEHtmrSpDI62+K4ec9n3EhhBuLVWQT7/JqL00DaDSXcE1IIjGw8/Ai4sYLIRwozLxKRcjy5g=
+  # MATTERMOST_HOOK_URL
+  - secure: plkynpr30dSUjc3ZwiKglM+JNojgRG13hAxeDzEaAsOPnNijksASupa+SfjjguI9oNTnBaHWdUneiQLtUDHPEk8oSr4khc5xY+w1u6E9Si31EvacTQ1l/VC/h2JkTqilADuRTPpdcWY0fbCTfDClsBuMsC4MZfKPHxDLAHabAuvbaGeDdMQwqChCxjxyKls22eOD3ny1KFD7LqqHlXJPoLSdUrAecb0A3flZren8mjdDiFFb0PhkM9UX/XlILxIT+Pm4E5Gj60GzsczsJP5ltbZTSBau9HzHL4T/9oXiYeTnYD/VjqcZV3KL1VLGDHINugXPnh940vCfOidjY8ewHX49+Lt9d5MtLjrUtIkD8XX4l7LMUnEEjIhHy9HsRTaMBLjZWcoKiIIK+hMjaSysFyh/7HrfnsozDjNMU1YUFXR/+rPlyI7kt81Fn3JjIArbvoWWfeE0BFfXm3ShB/MQ2ZoZV5PFyY8usC/HjyIlxqgBZJuvJPctJAztv/CKnL8lvLOKcjqHvbAt9sU16lMxurEnq1pEQHSkqLRdNFcumkfRHyThkUr0yjcS0Y+877FRqH6qIsAhj6UYcGvOE1/7DjiHofRhKPycgu8rNpmApP/aK9YiJZYkFvZnzuF+9uWTt8PTPBzKshu/nHkpoFdt0JUZLCODy4tcKxSTlA179IA=
 cache:
   yarn: true
   directories:
@@ -18,7 +19,6 @@ branches:
 script:
 - yarn lint
 - yarn build
-- yarn run check
 deploy:
 - provider: script
   skip-cleanup: true
@@ -27,11 +27,11 @@ deploy:
     branch: master
 - provider: script
   skip-cleanup: true
-  script: DEPLOY_BRANCH=build yarn deploy && yarn cozyPublish
+  script: DEPLOY_BRANCH=build yarn deploy && yarn cozyPublish --postpublish mattermost
   on:
     tags: true
 before_install:
-- openssl aes-256-cbc -K $encrypted_28cf5085d047_key -iv $encrypted_28cf5085d047_iv
+- openssl aes-256-cbc -K $encrypted_8ebb1ef83f64_key -iv $encrypted_8ebb1ef83f64_iv
   -in github_deploy_key.enc -out /tmp/github_deploy_key -d
 - eval "$(ssh-agent -s)"
 - chmod 600 /tmp/github_deploy_key
